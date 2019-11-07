@@ -1,10 +1,12 @@
 package main
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/url"
+	"os"
 	"strings"
 
 	"github.com/automattic/go/jaguar"
@@ -21,17 +23,11 @@ func runSetup() {
 
 	// prompt for username
 	fmt.Print("Enter username: ")
-	_, err := fmt.Scanf("%s", &user)
-	if err != nil {
-		log.Fatal("What happened?", err)
-	}
+	user = readLine()
 
 	// prompt for password
 	fmt.Print("Enter password: ")
-	_, err = fmt.Scanf("%s", &pass)
-	if err != nil {
-		log.Fatal("What happened?", err)
-	}
+	pass = readLine()
 
 	// make JWT call to fetch token
 	url := strings.Join([]string{conf.SiteURL, "wp-json", "jwt-auth/v1/token"}, "/")
@@ -105,18 +101,29 @@ func promptForURL(prompt string) string {
 	var input string
 
 	fmt.Print(prompt)
-	_, err := fmt.Scanf("%s", &input)
-	if err != nil {
-		log.Fatal("What happened?", err)
-	}
+	input = readLine()
 
 	input = strings.TrimSuffix(input, "/")
 
-	_, err = url.ParseRequestURI(input)
+	_, err := url.ParseRequestURI(input)
 	if err != nil {
-		log.Warn("Error with URL. Be sure to include http:// prefix")
+		log.Warn("Error with URL. Be sure to include http:// prefix ,", err)
 		return promptForURL(prompt)
 	}
 
 	return input
+}
+func readLine() string {
+	// fmt.Scanln produces "unexpected newline" and exits
+
+	bufr, err := bufio.NewReader(os.Stdin).ReadBytes('\n')
+	if err != nil {
+		log.Fatal("What happened?", err)
+	}
+	if bufr[len(bufr)-2] == byte(13) {
+		//windows input, cut 2 last bytes
+		bufr = bufr[:len(bufr)-2]
+		return string(bufr)
+	}
+	return string(bufr[:len(bufr)-1])
 }

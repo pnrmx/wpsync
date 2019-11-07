@@ -83,6 +83,10 @@ func myInit() {
 		os.Exit(0)
 	}
 
+	CrDirIfNtExst("./pages")
+	CrDirIfNtExst("./posts")
+	CrDirIfNtExst("./media")
+
 	file, err := ioutil.ReadFile("wpsync.json")
 	if err != nil {
 		log.Debug("wpsync.json file not found, running setup", err)
@@ -178,10 +182,7 @@ func confirmPrompt(prompt string) bool {
 
 	var ans string
 	fmt.Print(prompt)
-	_, err := fmt.Scanln(&ans)
-	if err != nil {
-		log.Fatal("What happened?", err)
-	}
+	ans = readLine()
 	if ans == "y" || ans == "Y" {
 		return true
 	} else {
@@ -196,4 +197,14 @@ func usage() {
 	flag.PrintDefaults()
 	fmt.Println("")
 	os.Exit(0)
+}
+
+// If no idea what dirs to create
+func CrDirIfNtExst(dir string) {
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		err = os.MkdirAll(dir, 0755)
+		if err != nil {
+			log.Fatal("Unable to create dir: ", err)
+		}
+	}
 }
